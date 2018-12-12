@@ -555,6 +555,18 @@ public class LaundayApp extends JPanel {
 		gbc.gridy = yCoord;
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		panel.add(btnSearch, gbc);
+
+		JButton btnResetDB = new JButton("데이터 초기화");
+		btnResetDB.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				DataStore.flushTable();
+			}
+		});
+		
+		gbc.gridx = xCoord++;
+		gbc.gridy = yCoord;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		panel.add(btnResetDB, gbc);
 		
 		///
 		xCoord = 0;
@@ -562,7 +574,7 @@ public class LaundayApp extends JPanel {
 		gbc.gridx = xCoord++;
 		gbc.gridy = yCoord;
 		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.gridwidth = 3;
+		gbc.gridwidth = 4;
 		panel.add(makeClothesTablePane(), gbc);
 
 		return panel;

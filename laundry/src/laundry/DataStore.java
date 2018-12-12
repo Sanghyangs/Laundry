@@ -55,7 +55,7 @@ public class DataStore {
 			
 			bSuccess = true;
 		} catch (Exception e) {
-			e.getMessage();
+			JOptionPane.showMessageDialog(null, e.getMessage());
 		}
 		
 		return bSuccess;
@@ -85,7 +85,7 @@ public class DataStore {
 			
 			bSuccess = true;
 		} catch (Exception e) {
-			e.getMessage();
+			JOptionPane.showMessageDialog(null, e.getMessage());
 		}
 		
 		return bSuccess;
@@ -124,6 +124,7 @@ public class DataStore {
 	        rs.close();
 	        stmt.close();
 		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, e.getMessage());
 		}
 		
 		return rowCount;
@@ -159,12 +160,20 @@ public class DataStore {
 	        rs.close();
 	        stmt.close();
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			JOptionPane.showMessageDialog(null, e.getMessage());
 		}
 		
 		return rowCount;
 	}
-
+	
+	public static void flushTable() {
+		try {
+			Statement statement = conn.createStatement();
+			statement.executeUpdate("TRUNCATE laundry.tb_laundry");
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, e.getMessage());
+		}
+	}
 	
 	public static ArrayList<String> getNickNameList() {
 		ArrayList<String> strNickNameList = new ArrayList<>();
@@ -181,10 +190,10 @@ public class DataStore {
 	        rs.close();
 	        stmt.close();
 		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, e.getMessage());
 		}				
 		return strNickNameList;
 	}
-	
 	
 	private static int getPeriod(String strNickName) {
 		int period = -1;
@@ -200,6 +209,7 @@ public class DataStore {
 	        rs.close();
 	        stmt.close();
 		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, e.getMessage());
 		}				
 		return period;
 	}
