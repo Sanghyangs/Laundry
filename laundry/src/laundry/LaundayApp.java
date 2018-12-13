@@ -2,6 +2,9 @@ package laundry;
 
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -12,7 +15,6 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JFrame;
 import javax.swing.JComponent;
-import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 import java.awt.BorderLayout;
@@ -20,9 +22,10 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
-import java.awt.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -45,7 +48,7 @@ public class LaundayApp extends JPanel {
         InputStream inputStream = getClass().getResourceAsStream(strPropertyPath);
         if (inputStream == null) {
         	String strMsg = "DB 설정 파일이 없습니다.\r\n프로그램을 종료합니다.";
-        	JOptionPane.showMessageDialog(null, strMsg);
+        	JOptionPane.showMessageDialog(m_mainFrame, strMsg);
 			System.exit(-1);
         }
         try {
@@ -53,9 +56,9 @@ public class LaundayApp extends JPanel {
 	        inputStream.close();
 		} catch (Exception e) {
         	String strMsg = "오류가 발생하였습니다. 설정을 확인하여야 합니다.\r\n오류메시지는 다음과 같습니다.\r\n(" + e.getLocalizedMessage() + ")";
-        	JOptionPane.showMessageDialog(null, strMsg);
+        	JOptionPane.showMessageDialog(m_mainFrame, strMsg);
 
-        	JOptionPane.showMessageDialog(null, "프로그램을 종료합니다.");
+        	JOptionPane.showMessageDialog(m_mainFrame, "프로그램을 종료합니다.");
 			System.exit(-1);
 		}
         
@@ -67,11 +70,34 @@ public class LaundayApp extends JPanel {
         String strUserPwd = (String) properties.get("DB.PASSWORD");
 
 		if (DataStore.connectDB(strHost, port, strDbName, strDbUser, strUserPwd) == false) {
-        	JOptionPane.showMessageDialog(null, "프로그램을 종료합니다.");
+        	JOptionPane.showMessageDialog(m_mainFrame, "프로그램을 종료합니다.");
 			System.exit(-1);
 		}
 		
 		JTabbedPane tabbedPane = new JTabbedPane();
+		tabbedPane.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				int tabSelected = tabbedPane.getSelectedIndex();
+		        switch (tabSelected) {
+		        case 0:
+		        	resetNewClothePanel();
+		        	break;
+		        	
+		        case 1:
+		        	resetMakeLaundrySchedulePanel();
+		        	break;
+		        	
+		        case 2:
+		        	resetUpdateLaundrySchedulePanel();
+		        	break;
+		        	
+		        default:
+		        	resetListAllClothePanel();
+		        	break;
+		        }
+			}
+		});
 		ImageIcon icon = null;
 
 		JComponent panel1 = registerNewClothe();
@@ -94,10 +120,16 @@ public class LaundayApp extends JPanel {
 		tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 	}
 
-	TextField m_clothesNickname;
+	JTextField m_clothesNickname;
 	JComboBox<String> m_cbKind;
-	TextField m_clothesPeriod;
+	JTextField m_clothesPeriod;
 	
+	private void resetNewClothePanel() {
+		m_clothesNickname.setText("");
+		m_cbKind.setSelectedIndex(0);
+		m_clothesPeriod.setText("");
+	}
+
 	protected JComponent registerNewClothe() {
 		JPanel panel = new JPanel();
 		GridBagLayout layout = new GridBagLayout();
@@ -115,7 +147,7 @@ public class LaundayApp extends JPanel {
 		gbc.gridy = yCoord;
 		panel.add(new JLabel("세탁물 별명: "), gbc);
 
-		m_clothesNickname = new TextField(6);
+		m_clothesNickname = new JTextField(6);
 		gbc.gridx = xCoord++;
 		gbc.gridy = yCoord;
 		panel.add(m_clothesNickname, gbc);
@@ -129,6 +161,14 @@ public class LaundayApp extends JPanel {
 
 	    String[] clothesKind = { "상의", "하의" };
 	    m_cbKind = new JComboBox<String>(clothesKind);
+	    m_cbKind.addFocusListener(new FocusAdapter() {
+	    	   @Override
+	    	   public void focusGained(FocusEvent e) {
+	    		   m_cbKind.setPopupVisible(true);
+	    		   //m_cbKind.showPopup();
+	    	   }
+	    	});
+	    //m_cbKind.setOpaque(true);
 		gbc.gridx = xCoord++;
 		gbc.gridy = yCoord;
 		panel.add(m_cbKind, gbc);
@@ -140,7 +180,7 @@ public class LaundayApp extends JPanel {
 		gbc.gridy = yCoord;
 		panel.add(new JLabel("세탁주기: "), gbc);
 
-		m_clothesPeriod = new TextField(6);
+		m_clothesPeriod = new JTextField(6);
 		gbc.gridx = xCoord++;
 		gbc.gridy = yCoord;
 		panel.add(m_clothesPeriod, gbc);
@@ -181,9 +221,9 @@ public class LaundayApp extends JPanel {
 				
 				boolean bSuccess = DataStore.insertClothes(strNickName, strKind, period);
 				if (bSuccess == true) {
-					JOptionPane.showMessageDialog(null, "세탁물을 등록하였습니다.");
+					JOptionPane.showMessageDialog(m_mainFrame, "세탁물을 등록하였습니다.");
 				} else {
-					JOptionPane.showMessageDialog(null, "세탁물 등록 과정에서 오류가 발생하였습니다.");
+					JOptionPane.showMessageDialog(m_mainFrame, "세탁물 등록 과정에서 오류가 발생하였습니다.");
 				}
 				
 				m_clothesNickname.setText("");
@@ -207,6 +247,16 @@ public class LaundayApp extends JPanel {
 	JTable m_mstpScheduleTable;
 	DefaultTableModel m_mstpScheduleTableEntry;
 	
+	private void resetMakeLaundrySchedulePanel() {
+    	Calendar calendar = Calendar.getInstance();
+
+		m_mlspYear.setText(Integer.toString(calendar.get(Calendar.YEAR)));
+		m_mlspMonth.setText(Integer.toString(calendar.get(Calendar.MONTH) + 1));
+		m_mlspDay.setText(Integer.toString(calendar.get(Calendar.DAY_OF_MONTH)));
+		
+		m_mstpScheduleTableEntry.setRowCount(0);
+	}
+	
 	private JScrollPane makeScheduleTablePane() {
 		m_mstpScheduleTableEntry = new DefaultTableModel();      
 		m_mstpScheduleTableEntry.addColumn("별명");
@@ -226,7 +276,7 @@ public class LaundayApp extends JPanel {
 	    return jsp;
 	}
 	
-	TextField m_mlspYear, m_mlspMonth, m_mlspDay;
+	JTextField m_mlspYear, m_mlspMonth, m_mlspDay;
 	protected JComponent makeLaundrySchedulePanel() {
 		JPanel panel = new JPanel();
 		GridBagLayout layout = new GridBagLayout();
@@ -246,7 +296,7 @@ public class LaundayApp extends JPanel {
 
     	Calendar calendar = Calendar.getInstance();
 
-		m_mlspYear = new TextField(6);
+		m_mlspYear = new JTextField(6);
 		m_mlspYear.setText(Integer.toString(calendar.get(Calendar.YEAR)));
 		gbc.gridx = xCoord++;
 		gbc.gridy = yCoord;
@@ -256,7 +306,7 @@ public class LaundayApp extends JPanel {
 		gbc.gridy = yCoord;
 		panel.add(new JLabel("년"), gbc);
 
-		m_mlspMonth = new TextField(6);
+		m_mlspMonth = new JTextField(6);
 		m_mlspMonth.setText(Integer.toString(calendar.get(Calendar.MONTH) + 1));
 		gbc.gridx = xCoord++;
 		gbc.gridy = yCoord;
@@ -266,7 +316,7 @@ public class LaundayApp extends JPanel {
 		gbc.gridy = yCoord;
 		panel.add(new JLabel("월"), gbc);
 
-		m_mlspDay = new TextField(6);
+		m_mlspDay = new JTextField(6);
 		m_mlspDay.setText(Integer.toString(calendar.get(Calendar.DAY_OF_MONTH)));
 		gbc.gridx = xCoord++;
 		gbc.gridy = yCoord;
@@ -330,9 +380,9 @@ public class LaundayApp extends JPanel {
 
 				int rowCount = DataStore.fillScheduleTableEntry(m_mstpScheduleTableEntry, year, month, day);
 				if (rowCount > 0) {
-					JOptionPane.showMessageDialog(null, "세탁할 옷이 " + rowCount + "벌 있습니다.");
+					JOptionPane.showMessageDialog(m_mainFrame, "세탁할 옷이 " + rowCount + "벌 있습니다.");
 				} else {
-					JOptionPane.showMessageDialog(null, "세탁할 옷이 없습니다.");
+					JOptionPane.showMessageDialog(m_mainFrame, "세탁할 옷이 없습니다.");
 				}
 			}
 		});
@@ -353,8 +403,25 @@ public class LaundayApp extends JPanel {
 		return panel;
 	}
 
-	TextField m_ulspYear, m_ulspMonth, m_ulspDay;
+	JTextField m_ulspYear, m_ulspMonth, m_ulspDay;
 	JComboBox<String> m_ulspCbNickNameList;
+	
+	private void resetUpdateLaundrySchedulePanel() {
+		m_ulspCbNickNameList.removeAllItems();
+		
+		ArrayList<String> strNickName = DataStore.getNickNameList(); 
+
+	    for (int index = 0; index < strNickName.size(); index++) {
+	    	m_ulspCbNickNameList.addItem(strNickName.get(index));
+	    }	    
+
+	    Calendar calendar = Calendar.getInstance();
+
+		m_ulspYear.setText(Integer.toString(calendar.get(Calendar.YEAR)));
+		m_ulspMonth.setText(Integer.toString(calendar.get(Calendar.MONTH) + 1));
+		m_ulspDay.setText(Integer.toString(calendar.get(Calendar.DAY_OF_MONTH)));		
+	}
+	
 	protected JComponent updateLaundrySchedule() {
 		JPanel panel = new JPanel();
 		GridBagLayout layout = new GridBagLayout();
@@ -391,7 +458,7 @@ public class LaundayApp extends JPanel {
 		panel.add(new JLabel("세탁완료일: "), gbc);
     	Calendar calendar = Calendar.getInstance();
 
-		m_ulspYear = new TextField(6);
+		m_ulspYear = new JTextField(6);
 		m_ulspYear.setText(Integer.toString(calendar.get(Calendar.YEAR)));
 		gbc.gridx = xCoord++;
 		gbc.gridy = yCoord;
@@ -401,7 +468,7 @@ public class LaundayApp extends JPanel {
 		gbc.gridy = yCoord;
 		panel.add(new JLabel("년"), gbc);
 
-		m_ulspMonth = new TextField(6);
+		m_ulspMonth = new JTextField(6);
 		m_ulspMonth.setText(Integer.toString(calendar.get(Calendar.MONTH) + 1));
 		gbc.gridx = xCoord++;
 		gbc.gridy = yCoord;
@@ -411,7 +478,7 @@ public class LaundayApp extends JPanel {
 		gbc.gridy = yCoord;
 		panel.add(new JLabel("월"), gbc);
 
-		m_ulspDay = new TextField(6);
+		m_ulspDay = new JTextField(6);
 		m_ulspDay.setText(Integer.toString(calendar.get(Calendar.DAY_OF_MONTH)));
 		gbc.gridx = xCoord++;
 		gbc.gridy = yCoord;
@@ -475,9 +542,9 @@ public class LaundayApp extends JPanel {
 				}
 				
 				if (DataStore.updateLaundry(strNickName, year, month, day) == true) {
-					JOptionPane.showMessageDialog(null, "세탁 일정을 update 하였습니다.");
+					JOptionPane.showMessageDialog(m_mainFrame, "세탁 일정을 update 하였습니다.");
 				} else {
-					JOptionPane.showMessageDialog(null, "세탁 일정을 update 하는 과정에서 오류가 발생하였습니다.");
+					JOptionPane.showMessageDialog(m_mainFrame, "세탁 일정을 update 하는 과정에서 오류가 발생하였습니다.");
 				}
 			}
 		});
@@ -492,6 +559,12 @@ public class LaundayApp extends JPanel {
 
 	JTable m_mctpClothesTable = null;
 	DefaultTableModel m_mctpClothesTableEntry = null;
+	
+	private void resetListAllClothePanel() {
+	    m_lacCbKind.setSelectedIndex(0);
+		m_mctpClothesTableEntry.setRowCount(0);
+	}
+	
 	private JScrollPane makeClothesTablePane() {
 		m_mctpClothesTableEntry = new DefaultTableModel();      
 		m_mctpClothesTable = new JTable(m_mctpClothesTableEntry);
@@ -544,9 +617,9 @@ public class LaundayApp extends JPanel {
 				String strCbKind = (String) m_lacCbKind.getSelectedItem();				
 				int rowCount = DataStore.listClothes(m_mctpClothesTableEntry, strCbKind);
 				if (rowCount > 0) {
-					JOptionPane.showMessageDialog(null, "등록된 옷이 " + rowCount + "벌 있습니다.");
+					JOptionPane.showMessageDialog(m_mainFrame, "등록된 옷이 " + rowCount + "벌 있습니다.");
 				} else {
-					JOptionPane.showMessageDialog(null, "등록된 옷이 없습니다.");
+					JOptionPane.showMessageDialog(m_mainFrame, "등록된 옷이 없습니다.");
 				}
 			}
 		});
@@ -560,6 +633,10 @@ public class LaundayApp extends JPanel {
 		btnResetDB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				DataStore.flushTable();
+				
+				m_mctpClothesTableEntry.setRowCount(0);
+				
+				JOptionPane.showMessageDialog(m_mainFrame, "등록된 의류 정보를 모두 삭제하였습니다.");
 			}
 		});
 		
@@ -592,17 +669,14 @@ public class LaundayApp extends JPanel {
 	    vertical.setValue(vertical.getMaximum());
 	}
 	
+	static JFrame m_mainFrame = null;
 	public static void main(String[] args) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				JFrame frame = new JFrame("세탁 관리 프로그램");
-				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		m_mainFrame = new JFrame("세탁 관리 프로그램");
+		m_mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-				frame.add(new LaundayApp(), BorderLayout.CENTER);
+		m_mainFrame.add(new LaundayApp(), BorderLayout.CENTER);
 
-				frame.setSize(500, 400);
-				frame.setVisible(true);
-			}
-		});
+		m_mainFrame.setSize(500, 400);
+		m_mainFrame.setVisible(true);
 	}
 }

@@ -177,7 +177,7 @@ public class DataStore {
 	
 	public static ArrayList<String> getNickNameList() {
 		ArrayList<String> strNickNameList = new ArrayList<>();
-		
+				
 		try {
 			String sqlString = "SELECT NICKNAME FROM laundry.tb_laundry";
 			Statement stmt = conn.createStatement();
